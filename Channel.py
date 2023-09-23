@@ -32,7 +32,8 @@ class Channel_Class:
             'unit',
             'car_end',
             'car_side',
-            'data_source',]
+            'data_source',
+        ]
 
         # Channel level metadata (specific to given event and channel):
         self.max_value = None
@@ -196,25 +197,23 @@ class Channel_Class:
 
     def calculate_damage(self, slope:float, gate:float=0, plot_graphs:bool=False):
         
-        #Check if rainflow counting was performed
-        if not (self.RF_range.any() and self.RF_mean.any()):
+        # Check if rainflow counting was performed
+        if not isinstance(self.RF_range, np.ndarray) or not isinstance(self.RF_mean, np.ndarray):
             print('No counted cycles, please run a rain-flow counting first')
+            return False
 
         if gate>0:
             # --------- Apply gate to range list ------------------
             RangeMax = self.RF_range.max()
-
             idx = np.where(self.RF_range >= (gate/100 * RangeMax))
-            
             self.RF_range = self.RF_range[idx]
             self.RF_mean = self.RF_mean[idx]
+            self.cycles_repetitions = self.cycles_repetitions[idx]
 
         # Calculate potential damage of full signal
         self.damage_per_cycle = self.RF_range ** slope
         self.demage_per_cycle_multiplied = np.multiply(self.damage_per_cycle, self.cycles_repetitions)
         self.Damage = np.sum(self.demage_per_cycle_multiplied)
-
-
 
         if plot_graphs == True:
             # ------------------ Count unique cycles -------------------
@@ -225,23 +224,19 @@ class Channel_Class:
             self.Range = np.flipud(self.Range)
             
             # Calculate potential damage of each block
-            damage = []
-            for i in range(self.Range.shape[0]):
-                damage.append( (self.Range[i] ** slope * self.Cycles[i]) / self.Damage * 100)
-            damage = np.array(damage)
+            damage = np.array([
+                (_range**slope*self.Cycles[idx])/self.Damage*100 
+                for idx, _range in enumerate(self.Range)
+            ])
             
             # Calculate cumulative cycles and damage
-            self.Ncum = []
-            suma = 0
-            for i in self.Cycles:
-                suma += i
-                self.Ncum.append(suma)
+            self.Ncum = [self.Cycles[0]]
+            for i in self.Cycles[1:]:
+                self.Ncum.append(self.Ncum[-1] + i)
                 
-            self.Dcum = []
-            suma = 0
-            for i in damage:
-                suma += i
-                self.Dcum.append(suma)
+            self.Dcum = [damage[0]]
+            for i in damage[1:]:
+                self.Dcum.append(self.Dcum[-1] + i)
             
             # Plot Graphs
             fig = plt.figure(figsize=(7, 10), dpi=90)
@@ -442,8 +437,7 @@ class Channel_Class:
         
         # And sort it by ascending range
         x.sort(key=lambda i: i[0])
-        
-        
+            
         # Prepare Rainflow input for Equivalent Block Script
         RF = []
         for i in range(len(x)):
