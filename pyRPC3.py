@@ -19,6 +19,9 @@ def normalize_int16(array:np.ndarray):
     normalized_array = (array/factor).astype(np.int16)
     
     return normalized_array, factor
+    
+def writeRPC3(filename:str, dt:float, channels:list[Channel_Class]):
+    __write_file__(filename, dt, channels)
      
 class RPC3:
 
@@ -63,7 +66,7 @@ class RPC3:
         print(' ===========================================================================================\n')   
     
     def save(self, filename:str, dt:float, channels:list[Channel_Class]):
-        self.__write_file__(filename, dt, channels)
+        __write_file__(filename, dt, channels)
         
     def __read_file__(self):
         
@@ -285,124 +288,124 @@ class RPC3:
             
         return True 
 
-    def __write_file__(self, filename:str, dt:float, channels:list[Channel_Class]):
+def __write_file__(filename:str, dt:float, channels:list[Channel_Class]):
+    
+    # Defaults
+    PTS_PER_FRAME = 1024
+    
+    # Normalize channels
+    __channels__ = [normalize_int16(c.value) for c in channels]
+    
+    # Determine max channel length, frames no and PTS_PER_GROUP
+    __max_chan_len__ = max(len(i.value) for i in channels)
+    FRAMES = math.ceil(__max_chan_len__/PTS_PER_FRAME)
+    PTS_PER_GROUP = FRAMES * PTS_PER_FRAME
+    
+    # Collect channels header values - all must be string, scale allowed format is E8.6
+    __chan_head__ = [
+        [c.name, c.units, format(__channels__[idx][1], '8.6E')] 
+        for idx, c in enumerate(channels)
+    ]
+    
+    # Get encoded header
+    __header__ = __write_header__(
+        dt, 
+        __chan_head__, 
+        PTS_PER_FRAME, 
+        FRAMES, 
+        PTS_PER_GROUP,
+    )
+    
+    # Get encoded data
+    __data__ = __write_data__(
+        [i[0] for i in __channels__],
+        PTS_PER_GROUP,
+    )
+    
+    # Write RPC3 file
+    with open(filename, 'wb') as f:
+        f.write(__header__)
+        f.write(__data__)
+    
+def __write_header__(dt:float, chanData:list, PTS_PER_FRAME:int, FRAMES:int, PTS_PER_GROUP:int):
+    
+    # Current time
+    ctime = datetime.now()
+    
+    # Header keys
+    keys = [
+        'FORMAT',
+        'NUM_HEADER_BLOCKS',
+        'NUM_PARAMS',
+        'FILE_TYPE',
+        'TIME_TYPE',
+        'DELTA_T',
+        'CHANNELS',
+        'DATE',
+        'REPEATS',
+        'DATA_TYPE',
+        'PTS_PER_FRAME',
+        'PTS_PER_GROUP',
+        'FRAMES',
+    ]
+    # Channel header keys
+    channel_keys = [
+        'DESC.CHAN_',
+        'UNITS.CHAN_',
+        'SCALE.CHAN_',
+        'LOWER_LIMIT.CHAN_',
+        'UPPER_LIMIT.CHAN_',
+    ]
+    
+    # Header values
+    values = [
+        'BINARY',
+        str(math.ceil((len(keys)+len(channel_keys)*len(chanData))/4)),  # Header block is 512 bytes: (32+96)*4
+        str(len(keys) + len(channel_keys)*len(chanData)),
+        'TIME_HISTORY',
+        'RESPONSE',
+        format(dt, '8.6E'),
+        str(len(chanData)),
+        f'{ctime.hour}:{ctime.minute}:{ctime.second} {ctime.day}-{ctime.month}-{ctime.year}',
+        str(1),
+        'SHORT_INTEGER',
+        str(PTS_PER_FRAME),
+        str(PTS_PER_GROUP),
+        str(FRAMES),
+    ]
+    
+    # Add channels headers keys and values
+    for idx, cData in enumerate(chanData):
+        keys += [i + str(idx+1) for i in channel_keys]
+        values += [*cData, str(1), str(-1)]
+    
+    # Encode keys and values
+    KEYS = [k.encode() for k in keys]
+    VALUES = [v.encode() for v in values]
+    
+    # Write header bytes - adjust keys length to 32 bytes and values lenght to 96 bytes
+    HEADER = b''
+    for idx in range(len(KEYS)):
+        HEADER += KEYS[idx].ljust(32, b'\x00') + VALUES[idx].ljust(96, b'\x00')
+    
+    # Required header length - based on NUM_HEADER_BLOCKS (each block is 512 bytes)
+    __header_len__ = 512 * int(values[1])
+    HEADER = HEADER.ljust(__header_len__, b'\x00')
+    
+    return(HEADER)
+
+def __write_data__(data:list, PTS_PER_GROUP:int):
+    
+    # Init buffer
+    DATA = b''
+    
+    # Iterate channels
+    for d in data:
+        # Fill channel to fit the group length
+        if len(d) < PTS_PER_GROUP:
+            d = np.pad(d, (0, PTS_PER_GROUP-len(d)), 'constant', constant_values=(d[-1]))
         
-        # Defaults
-        PTS_PER_FRAME = 1024
+        # Add to bytes buffer
+        DATA += d.tobytes()
         
-        # Normalize channels
-        __channels__ = [normalize_int16(c.value) for c in channels]
-        
-        # Determine max channel length, frames no and PTS_PER_GROUP
-        __max_chan_len__ = max(len(i.value) for i in channels)
-        FRAMES = math.ceil(__max_chan_len__/PTS_PER_FRAME)
-        PTS_PER_GROUP = FRAMES * PTS_PER_FRAME
-        
-        # Collect channels header values - all must be string, scale allowed format is E8.6
-        __chan_head__ = [
-            [c.name, c.units, format(__channels__[idx][1], '8.6E')] 
-            for idx, c in enumerate(channels)
-        ]
-        
-        # Get encoded header
-        __header__ = self.__write_header__(
-            dt, 
-            __chan_head__, 
-            PTS_PER_FRAME, 
-            FRAMES, 
-            PTS_PER_GROUP,
-        )
-        
-        # Get encoded data
-        __data__ = self.__write_data__(
-            [i[0] for i in __channels__],
-            PTS_PER_GROUP,
-        )
-        
-        # Write RPC3 file
-        with open(filename, 'wb') as f:
-            f.write(__header__)
-            f.write(__data__)
-        
-    def __write_header__(self, dt:float, chanData:list, PTS_PER_FRAME:int, FRAMES:int, PTS_PER_GROUP:int):
-        
-        # Current time
-        ctime = datetime.now()
-        
-        # Header keys
-        keys = [
-            'FORMAT',
-            'NUM_HEADER_BLOCKS',
-            'NUM_PARAMS',
-            'FILE_TYPE',
-            'TIME_TYPE',
-            'DELTA_T',
-            'CHANNELS',
-            'DATE',
-            'REPEATS',
-            'DATA_TYPE',
-            'PTS_PER_FRAME',
-            'PTS_PER_GROUP',
-            'FRAMES',
-        ]
-        # Channel header keys
-        channel_keys = [
-            'DESC.CHAN_',
-            'UNITS.CHAN_',
-            'SCALE.CHAN_',
-            'LOWER_LIMIT.CHAN_',
-            'UPPER_LIMIT.CHAN_',
-        ]
-        
-        # Header values
-        values = [
-            'BINARY',
-            str(math.ceil((len(keys)+len(channel_keys)*len(chanData))/4)),  # Header block is 512 bytes: (32+96)*4
-            str(len(keys) + len(channel_keys)*len(chanData)),
-            'TIME_HISTORY',
-            'RESPONSE',
-            format(dt, '8.6E'),
-            str(len(chanData)),
-            f'{ctime.hour}:{ctime.minute}:{ctime.second} {ctime.day}-{ctime.month}-{ctime.year}',
-            str(1),
-            'SHORT_INTEGER',
-            str(PTS_PER_FRAME),
-            str(PTS_PER_GROUP),
-            str(FRAMES),
-        ]
-        
-        # Add channels headers keys and values
-        for idx, cData in enumerate(chanData):
-            keys += [i + str(idx+1) for i in channel_keys]
-            values += [*cData, str(1), str(-1)]
-        
-        # Encode keys and values
-        KEYS = [k.encode() for k in keys]
-        VALUES = [v.encode() for v in values]
-        
-        # Write header bytes - adjust keys length to 32 bytes and values lenght to 96 bytes
-        HEADER = b''
-        for idx in range(len(KEYS)):
-            HEADER += KEYS[idx].ljust(32, b'\x00') + VALUES[idx].ljust(96, b'\x00')
-        
-        # Required header length - based on NUM_HEADER_BLOCKS (each block is 512 bytes)
-        __header_len__ = 512 * int(values[1])
-        HEADER = HEADER.ljust(__header_len__, b'\x00')
-        
-        return(HEADER)
-  
-    def __write_data__(self, data:list, PTS_PER_GROUP:int):
-        
-        # Init buffer
-        DATA = b''
-        
-        # Iterate channels
-        for d in data:
-            # Fill channel to fit the group length
-            if len(d) < PTS_PER_GROUP:
-                d = np.pad(d, (0, PTS_PER_GROUP-len(d)), 'constant', constant_values=(d[-1]))
-            
-            # Add to bytes buffer
-            DATA += d.tobytes()
-            
-        return DATA           
+    return DATA           
