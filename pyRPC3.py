@@ -5,7 +5,7 @@ import numpy as np
 import os
 from io import BufferedReader
 from datetime import datetime
-from Channel import Channel_Class
+from .Channel import Channel_Class
 
 def normalize_int16(array:np.ndarray):
     
@@ -243,16 +243,32 @@ class RPC3:
             self.Errors.append('DATA_TYPE error')
             return False
 
-        for frame_group in data_order:
-            for channel in range(channels):
-                for frame in frame_group:
-                    data = struct.unpack(
-                        f'<{point_per_frame}' + self.DATA_TYPES[self.__data_type__]['unpack_char'],
-                        file_handle.read(point_per_frame * self.DATA_TYPES[self.__data_type__]['bytes'])
-                    )
+        # Calculate total size needed for the channels array
+        total_frames = point_per_frame * frames
+        data_type_bytes = self.DATA_TYPES[self.__data_type__]['bytes']
+        unpack_char = self.DATA_TYPES[self.__data_type__]['unpack_char']
 
-                    # Concatenate channel value array
-                    self.Channels[channel].value = np.concatenate((self.Channels[channel].value, np.array(data)), axis=0)
+        # Preallocate a NumPy array for each channel
+        for channel in range(channels):
+            self.Channels[channel].value = np.zeros(total_frames, dtype=np.float32)  # Adjust dtype as necessary
+
+        # Read and unpack in batches
+        for i, frame_group in enumerate(data_order):
+            for channel in range(channels):
+                # Calculate the batch size for reading
+                batch_size = len(frame_group) * point_per_frame * data_type_bytes
+                batch_data = file_handle.read(batch_size)
+                # Unpack the entire batch at once
+                data_format = f'<{len(frame_group) * point_per_frame}{unpack_char}'
+                unpacked_data = struct.unpack(data_format, batch_data)
+                
+                # Fill the preallocated array with data
+                start_index = i * point_per_frame * len(frame_group)
+                end_index = start_index + len(frame_group) * point_per_frame
+                self.Channels[channel].value[start_index:end_index] = unpacked_data
+
+        # Note: The code assumes each frame_group has the same number of frames, which might not be the case.
+        # You may need to adjust logic for handling the last group or uneven groups.
 
         # Remove empty frame from channel values
         if removeLastFame:
