@@ -247,7 +247,7 @@ class RPC3:
             return False
 
         # Calculate total size needed for the channels array
-        total_frames = point_per_frame * frames
+        total_frames = point_per_frame * len([item for sublist in data_order for item in sublist])
         data_type_bytes = self.DATA_TYPES[self.__data_type__]['bytes']
         unpack_char = self.DATA_TYPES[self.__data_type__]['unpack_char']
 
