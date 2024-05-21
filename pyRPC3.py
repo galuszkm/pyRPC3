@@ -58,15 +58,18 @@ class RPC3:
         print('\n ===========================================================================================')
         sys.stdout.write("   %-15s %-30s %-15s %-15s %-15s\n" % ('Channel No', 'Name', 'Units', 'Min', 'Max'))
         print(' -------------------------------------------------------------------------------------------')
-        for i in sorted(self.Channels, key = lambda x: x.Number):
+        for i in sorted(self.Channels, key = lambda x: x.number):
             sys.stdout.write(
                 "     %-13s %-30s %-15s %-15s %-15s\n" % 
-                (i.Number, i.Name, i.Units, "%.3e" % i.getMin(), "%.3e" % i.getMax())
+                (i.number, i.name, i.units, "%.3e" % i.getMin(), "%.3e" % i.getMax())
             )
         print(' ===========================================================================================\n')   
     
     def save(self, filename:str, dt:float, channels:list[Channel_Class]):
         __write_file__(filename, dt, channels)
+    
+    def getErrors(self) -> list[str]:
+        return self.Errors
         
     def __read_file__(self):
         
@@ -98,7 +101,7 @@ class RPC3:
             try:
                 # Read header
                 __head__, __value__ = struct.unpack('<32s96s', file_handle.read(128))
-                __value__ = __value__.replace(b'\0', b'').decode('windows-1252').replace('\n', '')
+                __value__ = __value__.replace(b'\0', b'').decode('windows-1252').replace('\n', '').strip()
                 __head__ = __head__.replace(b'\0', b'').decode('windows-1252').replace('\n', '')
                 return __head__, __value__
             except struct.error:
