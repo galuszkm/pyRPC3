@@ -8,24 +8,23 @@ from datetime import datetime
 from .Channel import Channel_Class
 
 def normalize_int16(array:np.ndarray):
-    
     # Array bounds
     absmax_value = np.abs([array.max(), array.min()]).max()
-    
     # Normalization factor
     factor = absmax_value/(2**15-1)
-    
     # Normalize array
-    normalized_array = (array/factor).astype(np.int16)
-    
+    if factor > 0:
+        normalized_array = (array/factor).astype(np.int16)
+    else:
+        normalized_array = array.astype(np.int16)
+        
     return normalized_array, factor
     
 def writeRPC3(filename:str, dt:float, channels:list[Channel_Class]):
     __write_file__(filename, dt, channels)
      
 class RPC3:
-
-    def __init__(self, filename:str, debug:bool=False, extra_headers:dict={}):
+    def __init__(self, filename:str, debug:bool=False, extra_headers:dict={}, read_channels:list=None):
     
         # Init props
         self.Filename = filename
@@ -49,6 +48,9 @@ class RPC3:
             'FLOATING_POINT': {'unpack_char': 'f', 'bytes': 4},
             'SHORT_INTEGER': {'unpack_char': 'h', 'bytes': 2},
         }
+        
+        # Set specific channels to read
+        self.__channels_to_read__ = read_channels
         
         # Read file
         self.__read_file__()
@@ -257,21 +259,34 @@ class RPC3:
         # Preallocate a NumPy array for each channel
         for channel in range(channels):
             self.Channels[channel].value = np.zeros(total_frames, dtype=np.float32)  # Adjust dtype as necessary
+            
+            # Default to all channels if specific_channels is None
+            if self.__channels_to_read__ is None:
+                specific_channels = range(channels)
+            else:
+                specific_channels = self.__channels_to_read__
 
         # Read and unpack in batches
         for i, frame_group in enumerate(data_order):
             for channel in range(channels):
+                
                 # Calculate the batch size for reading
                 batch_size = len(frame_group) * point_per_frame * data_type_bytes
-                batch_data = file_handle.read(batch_size)
-                # Unpack the entire batch at once
-                data_format = f'<{len(frame_group) * point_per_frame}{unpack_char}'
-                unpacked_data = struct.unpack(data_format, batch_data)
                 
-                # Fill the preallocated array with data
-                start_index = i * point_per_frame * len(frame_group)
-                end_index = start_index + len(frame_group) * point_per_frame
-                self.Channels[channel].value[start_index:end_index] = unpacked_data
+                # Fill the preallocated array with data if the channel is in specific_channels
+                if channel in specific_channels:
+                    batch_data = file_handle.read(batch_size)
+                    # Unpack the entire batch at once
+                    data_format = f'<{len(frame_group) * point_per_frame}{unpack_char}'
+                    unpacked_data = struct.unpack(data_format, batch_data)
+                    
+                    # Fill the preallocated array with data
+                    start_index = i * point_per_frame * len(frame_group)
+                    end_index = start_index + len(frame_group) * point_per_frame
+                    self.Channels[channel].value[start_index:end_index] = unpacked_data
+                else:
+                    # Skip the right number of bytes for non-specified channels
+                    file_handle.seek(batch_size, 1)
 
         # Note: The code assumes each frame_group has the same number of frames, which might not be the case.
         # You may need to adjust logic for handling the last group or uneven groups.
@@ -279,7 +294,8 @@ class RPC3:
         # Remove empty frame from channel values
         if removeLastFame:
             for channel in range(channels):
-                self.Channels[channel].value = self.Channels[channel].value[0:point_per_frame*frames]
+                if len(self.Channels[channel].value) > 0:
+                    self.Channels[channel].value = self.Channels[channel].value[0:point_per_frame*frames]
 
         # Scale channel data
         for channel in range(channels):

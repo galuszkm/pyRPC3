@@ -12,4 +12,4 @@ channel2 = Channel_Class(2, 'Force2', 'N', 1, 1e-3)
 channel2.value = force2
 
 # Save rsp file
-# sig.save('OutputSignal.rsp', 1e-3, [channel1, channel2])
+sig.save('OutputSignal.rsp', 1e-3, [channel1, channel2])
