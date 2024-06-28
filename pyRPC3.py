@@ -304,8 +304,12 @@ class RPC3:
 
             # Scale data
             self.Channels[channel].value *= channel_scale
-            
-        return True 
+
+        #Remove empty channels
+        indices_to_leave_set = set(self.__channels_to_read__)
+        self.Channels = [obj for i, obj in enumerate(self.Channels) if i in indices_to_leave_set]
+
+        return True
 
 def __write_file__(filename:str, dt:float, channels:list[Channel_Class]):
     
