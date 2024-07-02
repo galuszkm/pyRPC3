@@ -306,8 +306,9 @@ class RPC3:
             self.Channels[channel].value *= channel_scale
 
         #Remove empty channels
-        indices_to_leave_set = set(self.__channels_to_read__)
-        self.Channels = [obj for i, obj in enumerate(self.Channels) if i in indices_to_leave_set]
+        if self.__channels_to_read__ is not None:
+            indices_to_leave_set = set(self.__channels_to_read__)
+            self.Channels = [obj for i, obj in enumerate(self.Channels) if i in indices_to_leave_set]
 
         return True
 
