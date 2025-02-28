@@ -27,4 +27,5 @@ src/test.js
 
 __pycache__/*
 */__pycache__/*
+python/*
 
