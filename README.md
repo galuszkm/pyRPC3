@@ -12,11 +12,16 @@
 
 ## Installation
 
+
+### Install via pip
+
 You can install pyRPC3 directly from our GitLab repository using pip:
 
 ```bash
 pip install git+https://cae:911/michgalu/pyRPC3.git
 ```
+
+### Install for development
 
 Clone the repository and install the required packages:
 
