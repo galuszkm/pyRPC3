@@ -5,6 +5,7 @@ setup(
     version="1.0.0",
     package_dir={"pyRPC3": "src"},
     packages=["pyRPC3"],
+    python_requires=">=3.11",
     install_requires=[
         "colorama==0.4.6",
         "contourpy==1.3.1",
