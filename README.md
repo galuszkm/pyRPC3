@@ -12,6 +12,17 @@
 
 ## Installation
 
+
+### Install via pip
+
+You can install pyRPC3 directly from our GitLab repository using pip:
+
+```bash
+pip install git+https://github.com/galuszkm/pyRPC3.git
+```
+
+### Install for development
+
 Clone the repository and install the required packages:
 
 ```bash
@@ -22,7 +33,7 @@ pip install -r requirements.txt
 
 ### Requirements
 
-- Python 3.9+
+- Python 3.11+
 - [NumPy](https://numpy.org/)
 - [Matplotlib](https://matplotlib.org/)
 
@@ -103,9 +114,31 @@ Tests cover:
 
 ## Contributing
 
-Contributions, issues, and feature requests are welcome!  
-Please check the [issues page](https://github.com/galuszkm/pyRPC3/issues) and submit a pull request for any improvements or bug fixes.
+Contributions are welcome! To contribute:
 
-## License
+1. **Clone the repository:**
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+   ```bash
+   git clone https://github.com/galuszkm/pyRPC3.git
+   ```
+
+2. **Create a new branch:**
+
+   ```bash
+   git checkout -b feature/my-new-feature
+   ```
+
+3. **Make your changes and commit them:**
+
+   ```bash
+   git commit -am "Add new feature"
+   ```
+
+4. **Push to your branch:**
+
+   ```bash
+   git push origin feature/my-new-feature
+   ```
+
+5. **Open a merge request** on the GitLab repository.
+

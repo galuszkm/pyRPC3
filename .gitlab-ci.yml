@@ -1,0 +1,40 @@
+image: python:3.11-slim
+
+stages:
+  - setup
+  - test
+
+# Cache pip downloads to speed up future jobs
+cache:
+  paths:
+    - .cache/pip
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+setup:
+  stage: setup
+  tags:
+    - docker
+  script:
+    # Create and activate a virtual environment
+    - python -m venv venv
+    - source venv/bin/activate
+    # Upgrade pip, install your package in editable mode, and install pytest
+    - pip install --upgrade pip
+    - pip install -e .
+    - pip install pytest
+  artifacts:
+    paths:
+      - venv/   # Save the virtual environment for the test stage
+
+test:
+  stage: test
+  tags:
+    - docker
+  dependencies:
+    - setup   # Retrieve the venv prepared in the setup job
+  script:
+    # Activate the virtual environment and run your tests
+    - source venv/bin/activate
+    - pytest tests
