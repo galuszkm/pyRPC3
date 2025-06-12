@@ -15,7 +15,7 @@
 
 ### Install via pip
 
-You can install pyRPC3 directly from our GitLab repository using pip:
+You can install pyRPC3 directly from our Github repository using pip:
 
 ```bash
 pip install git+https://github.com/galuszkm/pyRPC3.git
@@ -140,5 +140,5 @@ Contributions are welcome! To contribute:
    git push origin feature/my-new-feature
    ```
 
-5. **Open a merge request** on the GitLab repository.
+5. **Open a pull request** on the Github repository.
 
