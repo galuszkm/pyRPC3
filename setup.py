@@ -16,7 +16,7 @@ setup(
         "matplotlib==3.10.1",
         "numpy==2.2.5",
         "packaging==25.0",
-        "pillow==11.2.1",
+        "pillow==11.3.0",
         "pluggy==1.5.0",
         "pyparsing==3.2.3",
         "pytest==8.3.5",
