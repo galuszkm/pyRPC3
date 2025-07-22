@@ -240,14 +240,10 @@ class RPC3:
         number_of_groups = int(math.ceil(frames / frames_per_group))
         data_order = []
         frame_no = 1
-        remove_last_frame = False
 
         for i in range(number_of_groups):
             temp = []
-            for j in range(frames_per_group):
-                if frame_no > frames:
-                    remove_last_frame = True
-                    break
+            for _ in range(frames_per_group):
                 temp.append(frame_no)
                 frame_no += 1
             data_order.append(temp)
@@ -289,7 +285,7 @@ class RPC3:
         for ch in range(channels):
             self.channels[ch].values = np.zeros(total_frames, dtype=np.float32)
         specific_channels = range(channels) if self._channels_to_read is None else self._channels_to_read
-
+        
         # Read and unpack data in batches
         for i, frame_group in enumerate(data_order):
             for ch in range(channels):
@@ -298,21 +294,29 @@ class RPC3:
                     batch_data = file_handle.read(batch_size)
                     data_format = f'<{len(frame_group) * pts_per_frame}{unpack_char}'
                     unpacked_data = struct.unpack(data_format, batch_data)
-                    start_index = i * pts_per_frame * len(frame_group)
-                    end_index = start_index + len(frame_group) * pts_per_frame
+                    # Determine the actual number of points in group
+                    points_in_group = len(frame_group) * pts_per_frame
+                    # Set start index based on previous groups
+                    # We must summ the number of frames already processed
+                    start_index = sum(len(group) for group in data_order[:i]) * pts_per_frame
+                    end_index = start_index + points_in_group
+                    # Set the values for the channel
                     self.channels[ch].values[start_index:end_index] = unpacked_data
                 else:
                     file_handle.seek(batch_size, 1)
 
         # Remove extra frames if needed
-        if remove_last_frame:
+        # This is required if actual number of frames is less 
+        # then than number_of_groups * frames_per_group
+        if number_of_groups * frames_per_group > frames:
             for ch in range(channels):
                 if len(self.channels[ch].values) > 0:
-                    self.channels[ch].values = self.channels[ch].values[0:pts_per_frame * frames]
+                    points_no = pts_per_frame * frames
+                    self.channels[ch].values = self.channels[ch].values[:points_no]
 
         # Scale channel data
         for ch in self.channels:
-            ch._apply_scale()
+            ch._apply_scale()            
 
         # Retain only specified channels if provided
         if self._channels_to_read is not None:
