@@ -1,5 +1,5 @@
 import pytest
-from src import RPC3
+from pyRPC3 import RPC3
 
 @pytest.mark.parametrize("test_file", ["tests/rsp/test1.rsp"])
 def test_read_rsp_file1(test_file):

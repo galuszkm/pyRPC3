@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from src import RPC3, write_rpc3
+from pyRPC3 import RPC3, write_rpc3
 
 @pytest.mark.parametrize("test_file", ["tests/rsp/test1.rsp"])
 def test_write_rpc3_roundtrip(tmp_path, test_file):

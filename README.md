@@ -37,7 +37,7 @@ pip install -r requirements.txt
 - [NumPy](https://numpy.org/)
 - [Matplotlib](https://matplotlib.org/)
 
-**Interactive Plotting Note:**  
+**Interactive Plotting Note:**
 If you need interactive plots and do not have Tkinter installed, you can use an alternative backend like PySide6. Install it with:
 
 ```bash
@@ -141,4 +141,3 @@ Contributions are welcome! To contribute:
    ```
 
 5. **Open a pull request** on the Github repository.
-

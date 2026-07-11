@@ -1,5 +1,5 @@
 import numpy as np
-from src import RPC3, Channel
+from pyRPC3 import RPC3, Channel
 
 # -------------------------
 # Dummy subclass for RPC3 testing
@@ -63,7 +63,7 @@ def test_rpc3_save_exclude(tmp_path):
     Test that the save() method correctly excludes channels specified in exclude_channels.
     """
     rpc = DummyRPC3("dummy.rpc3", debug=False)
-    
+
     # Save file with all channels.
     file_all = tmp_path / "all_channels.rpc3"
     rpc.save(str(file_all))

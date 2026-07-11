@@ -1,0 +1,25 @@
+# https://pre-commit.com
+# https://pre-commit.com/hooks.html
+
+default_language_version:
+  python: python3.12
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 'v5.0.0'
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: 'v1.5.0'
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        stages: [pre-commit, pre-push]

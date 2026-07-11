@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')  # Use a non-interactive backend for testing
 import matplotlib.pyplot as plt
-from src import Channel
+from pyRPC3 import Channel
 
 # -------------------------
 # Pytest Unit Tests for Channel
