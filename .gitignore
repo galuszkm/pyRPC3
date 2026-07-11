@@ -34,3 +34,6 @@ Thumbs.db
 
 # Misc
 *.log
+
+# Kiro specs (local development state)
+.kiro/specs/
