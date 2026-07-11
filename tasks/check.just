@@ -1,6 +1,12 @@
 # run all check tasks
 [group("check")]
-check: format check-code check-type check-hooks
+check: check-format check-code check-type check-hooks
+
+# check code formatting (no auto-fix)
+[group("check")]
+check-format:
+    uv run ruff check --select=I {{SOURCES}} {{TESTS}}
+    uv run ruff format --check {{SOURCES}} {{TESTS}}
 
 # check code quality
 [group("check")]

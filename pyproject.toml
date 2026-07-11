@@ -8,8 +8,8 @@ readme = "README.md"
 license = { text = "MIT" }
 
 dependencies = [
-    "numpy>=2.2.5",
-    "matplotlib>=3.10.1",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
 ]
 
 [build-system]
