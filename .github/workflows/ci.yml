@@ -51,7 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
     steps:
       - uses: actions/checkout@v4
 
@@ -59,6 +59,8 @@ jobs:
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
+          python-version-file: ""
+          python-preview: true
 
       - name: Install dev deps
         run: uv sync --all-groups
