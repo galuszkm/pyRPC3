@@ -1,6 +1,8 @@
 import copy
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 class Channel:
     """
@@ -14,7 +16,14 @@ class Channel:
         values (np.ndarray): The array of data values.
     """
 
-    def __init__(self, number: int , name: str = '', units: str = '', dt: float = None, scale: float = 1) -> None:
+    def __init__(
+        self,
+        number: int,
+        name: str = "",
+        units: str = "",
+        dt: float | None = None,
+        scale: float = 1,
+    ) -> None:
         """
         Initialize a Channel instance.
 
@@ -78,7 +87,7 @@ class Channel:
         Raises:
             ValueError: If the provided value is not an integer.
         """
-        if value is not None and not isinstance(value, int):
+        if not isinstance(value, int):
             raise ValueError("Channel number must be an integer.")
         self._number = value
 
@@ -121,7 +130,7 @@ class Channel:
             raise ValueError("Scale factor must be numeric (int or float).")
         self.values *= self._scale
 
-    def copy(self) -> 'Channel':
+    def copy(self) -> "Channel":
         """
         Create a deep copy of the channel instance.
 
@@ -149,8 +158,8 @@ class Channel:
         plt.grid(True)
         plt.xlim(time.min(), time.max())
         plt.ylim(self.get_min(), self.get_max())
-        plt.title(f'Channel {self.number}: {self.name}')
-        plt.xlabel('Time [s]')
+        plt.title(f"Channel {self.number}: {self.name}")
+        plt.xlabel("Time [s]")
         plt.ylabel(self.units)
         plt.show()
 
@@ -161,5 +170,7 @@ class Channel:
         Returns:
             str: A string containing channel details.
         """
-        return (f"Channel(number={self.number}, name='{self.name}', units='{self.units}', "
-                f"dt={self.dt}, num_values={self.values.size})")
+        return (
+            f"Channel(number={self.number}, name='{self.name}', units='{self.units}', "
+            f"dt={self.dt}, num_values={self.values.size})"
+        )

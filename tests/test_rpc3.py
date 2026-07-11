@@ -1,5 +1,8 @@
 import numpy as np
-from src import RPC3, Channel
+import pytest
+
+from pyRPC3 import RPC3, Channel
+
 
 # -------------------------
 # Dummy subclass for RPC3 testing
@@ -9,6 +12,7 @@ class DummyRPC3(RPC3):
     Dummy subclass of RPC3 that bypasses file reading by manually
     initializing with dummy channels.
     """
+
     def _read_file(self):
         """
         Override _read_file to bypass file reading and create dummy channels.
@@ -19,20 +23,20 @@ class DummyRPC3(RPC3):
         ch2.values = np.array([4, 5, 6], dtype=np.float32)
         self.channels = [ch1, ch2]
         self.dt = 0.1
-        return True
+
 
 # -------------------------
 # Pytest Unit Tests for RPC3
 # -------------------------
 
+
 def test_rpc3_nonexistent_file(tmp_path):
     """
-    Test that initializing RPC3 with a nonexistent file logs an error.
+    Test that initializing RPC3 with a nonexistent file raises FileNotFoundError.
     """
     fake_file = tmp_path / "nonexistent.rpc3"
-    rpc = RPC3(str(fake_file), debug=True)
-    errors = rpc.get_errors()
-    assert any("File not found:" in err for err in errors)
+    with pytest.raises(FileNotFoundError):
+        RPC3(str(fake_file), debug=True)
 
 
 def test_rpc3_info(capsys):
@@ -63,7 +67,7 @@ def test_rpc3_save_exclude(tmp_path):
     Test that the save() method correctly excludes channels specified in exclude_channels.
     """
     rpc = DummyRPC3("dummy.rpc3", debug=False)
-    
+
     # Save file with all channels.
     file_all = tmp_path / "all_channels.rpc3"
     rpc.save(str(file_all))
@@ -76,14 +80,3 @@ def test_rpc3_save_exclude(tmp_path):
 
     # The file with one channel excluded should be smaller than the file with all channels.
     assert size_exclude < size_all
-
-
-def test_get_errors_initially_empty():
-    """
-    Test that get_errors() returns an empty list when no errors have occurred.
-    """
-    rpc = DummyRPC3("dummy.rpc3", debug=False)
-    errors = rpc.get_errors()
-    assert isinstance(errors, list)
-    # Since the dummy _read_file() does not generate errors, the errors list should be empty.
-    assert len(errors) == 0
