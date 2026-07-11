@@ -1,0 +1,67 @@
+# Continuous Integration — runs on every push and pull request.
+
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # -- Quality checks (format, lint, type) --
+  check:
+    name: Quality checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dev deps
+        run: uv sync --all-groups
+
+      - name: Ruff — format check
+        run: uv run ruff format --check src tests
+
+      - name: Ruff — lint
+        run: uv run ruff check src tests
+
+      - name: ty — type check
+        run: uv run ty check src tests
+
+  # -- Tests --
+  test:
+    name: Tests (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dev deps
+        run: uv sync --all-groups
+
+      - name: pytest with coverage
+        run: uv run pytest --cov=src/pyRPC3 --cov-report=term-missing tests -v
