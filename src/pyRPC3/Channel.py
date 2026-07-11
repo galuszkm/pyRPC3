@@ -87,7 +87,7 @@ class Channel:
         Raises:
             ValueError: If the provided value is not an integer.
         """
-        if value is not None and not isinstance(value, int):
+        if not isinstance(value, int):
             raise ValueError("Channel number must be an integer.")
         self._number = value
 

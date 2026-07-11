@@ -24,14 +24,14 @@ src/pyRPC3/
 ├── __init__.py      # Public API: Channel, RPC3, write_rpc3
 ├── Channel.py       # Channel class — one time-series data channel
 ├── RPC3.py          # RPC3 class — read/write RPC3 binary files
-└── writter.py       # write_rpc3() — low-level binary writer + normalize_int16()
+└── writer.py        # write_rpc3() — low-level binary writer + normalize_int16()
 ```
 
 | Module | Responsibility |
 |--------|---------------|
 | `Channel.py` | Data container for a single channel (number, name, units, dt, values). Plotting. |
-| `RPC3.py` | Binary file parser (header + data reading), file writing delegation, error collection. |
-| `writter.py` | Low-level binary serialization of channels to RPC3 format. Int16 normalization. |
+| `RPC3.py` | Binary file parser (header + data reading), file writing delegation, exception raising on errors. |
+| `writer.py` | Low-level binary serialization of channels to RPC3 format. Int16 normalization. |
 
 ---
 
@@ -60,6 +60,7 @@ RPC3(filename)
 │   ├── _read_header(file_handle)     → populates self.headers, self.channels metadata
 │   └── _read_data(file_handle)       → populates channel.values arrays
 └── channels: list[Channel]            ready for use
+    (raises FileNotFoundError or ValueError on failure)
 ```
 
 **Writing:**
@@ -89,7 +90,7 @@ rpc.save(filename)  OR  write_rpc3(filename, dt, channels)
 ## Adding to the Project — Checklist
 
 1. **Decide which module it belongs to.** Channel data handling → `Channel.py`.
-   File format parsing → `RPC3.py`. Binary serialization → `writter.py`. New
+   File format parsing → `RPC3.py`. Binary serialization → `writer.py`. New
    concern → new module (rare for this project's scope).
 2. **Read the existing module first** and match its style.
 3. **Add tests** for any new public API in `tests/`.
@@ -106,7 +107,7 @@ rpc.save(filename)  OR  write_rpc3(filename, dt, channels)
 - Don't add unnecessary abstractions — this is a 3-module library, not a
   framework.
 - Don't convert NumPy arrays to Python lists for processing.
-- Don't silently swallow file read errors — collect them in `self.errors`.
+- Don't silently swallow file read errors — raise `FileNotFoundError` or `ValueError`.
 - Don't use `Optional[X]` / `Union` / `List` / `Dict` — use `X | None`,
   `list`, `dict`.
 - Don't leave untyped signatures on public APIs.

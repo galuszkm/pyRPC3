@@ -66,7 +66,7 @@ tests/
 ├── test_channel.py         # Channel class behaviour
 ├── test_rpc3.py            # RPC3 class (with dummy subclass for unit tests)
 ├── test_rpc3_reading.py    # RPC3 reading real fixtures (integration)
-└── test_writter.py         # write_rpc3 round-trip (integration)
+└── test_writer.py          # write_rpc3 round-trip (integration)
 ```
 
 ---

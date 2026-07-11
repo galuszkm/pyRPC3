@@ -7,7 +7,7 @@ from io import BufferedReader
 import numpy as np
 
 from .Channel import Channel
-from .writter import write_rpc3
+from .writer import write_rpc3
 
 # Global constants
 DATA_TYPES = {
@@ -36,12 +36,15 @@ class RPC3:
             debug (bool, optional): Enable debug output. Defaults to False.
             extra_headers (dict, optional): Additional header key-value pairs.
             read_channels (list, optional): Specific channel indices to read.
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            ValueError: If the file header or data cannot be parsed correctly.
         """
         self.filename = filename
         self.debug = debug
         self.headers = {}
         self.channels: list[Channel] = []
-        self.errors = []
 
         # Extra headers to add if not defined in file
         self._extra_headers = {
@@ -99,36 +102,25 @@ class RPC3:
 
         write_rpc3(filename, self.dt, channels_to_write)
 
-    def get_errors(self) -> list[str]:
-        """
-        Get a list of error messages.
-
-        Returns:
-            list[str]: Errors encountered.
-        """
-        return self.errors
-
     def _read_file(self):
         """
         Read the RPC3 file.
 
-        Returns:
-            bool: True if reading was successful, False otherwise.
+        Raises:
+            FileNotFoundError: If the file does not exist.
+            ValueError: If the file cannot be parsed correctly.
         """
-        if os.path.isfile(self.filename):
-            with open(self.filename, "rb") as file_handle:
-                # Get file size
-                file_handle.seek(0, os.SEEK_END)
-                self._file_size = file_handle.tell()
-                file_handle.seek(0, 0)
+        if not os.path.isfile(self.filename):
+            raise FileNotFoundError(f"File not found: {self.filename}")
 
-                if self._read_header(file_handle):
-                    return bool(self._read_data(file_handle))
-                else:
-                    return False
-        else:
-            self.errors.append(f"File not found: {self.filename}")
-            return False
+        with open(self.filename, "rb") as file_handle:
+            # Get file size
+            file_handle.seek(0, os.SEEK_END)
+            self._file_size = file_handle.tell()
+            file_handle.seek(0, 0)
+
+            self._read_header(file_handle)
+            self._read_data(file_handle)
 
     def _read_header(self, file_handle: BufferedReader):
         """
@@ -137,8 +129,8 @@ class RPC3:
         Args:
             file_handle (BufferedReader): Open file handle.
 
-        Returns:
-            bool: True if header is read successfully, False otherwise.
+        Raises:
+            ValueError: If the header cannot be parsed correctly.
         """
 
         def _read_header_entry():
@@ -152,21 +144,18 @@ class RPC3:
                 )
                 head = head.replace(b"\0", b"").decode("windows-1252").replace("\n", "")
                 return head, value
-            except struct.error:
-                self.errors.append(
+            except struct.error as err:
+                raise ValueError(
                     "Header does not contain sufficient data (128 bytes expected)."
-                )
-                return None, None
-            except UnicodeDecodeError:
-                self.errors.append("Header could not be decoded properly.")
-                return None, None
+                ) from err
+            except UnicodeDecodeError as err:
+                raise ValueError("Header could not be decoded properly.") from err
 
         # Read the first fixed headers
         for _i in range(3):
             head_name, head_value = _read_header_entry()
             if head_name not in ["FORMAT", "NUM_HEADER_BLOCKS", "NUM_PARAMS"]:
-                self.errors.append("Header does not contain required fields.")
-                return False
+                raise ValueError("Header does not contain required fields.")
 
             if head_name in ["NUM_HEADER_BLOCKS", "NUM_PARAMS"]:
                 self.headers[head_name] = int(head_value)
@@ -178,8 +167,7 @@ class RPC3:
 
         # Check if file contains data
         if not self.headers["NUM_PARAMS"] > 3:
-            self.errors.append("No data in file.")
-            return False
+            raise ValueError("No data in file.")
 
         # Read remaining headers
         for _channel in range(3, self.headers["NUM_PARAMS"]):
@@ -215,8 +203,9 @@ class RPC3:
             self._data_type = self.headers["DATA_TYPE"]
             self.dt = self.headers["DELTA_T"]
         except KeyError as expected_header:
-            self.errors.append(f"A mandatory header is missing: {expected_header}")
-            return False
+            raise ValueError(
+                f"A mandatory header is missing: {expected_header}"
+            ) from expected_header
 
         # Create channel objects
         for channel in range(self.headers["CHANNELS"]):
@@ -235,8 +224,6 @@ class RPC3:
             )
             self.channels.append(ch)
 
-        return True
-
     def _read_data(self, file_handle: BufferedReader):
         """
         Read the data portion of the RPC3 file.
@@ -244,8 +231,8 @@ class RPC3:
         Args:
             file_handle (BufferedReader): Open file handle positioned after the header.
 
-        Returns:
-            bool: True if data is read successfully, False otherwise.
+        Raises:
+            ValueError: If the data cannot be decoded correctly.
         """
         channels = self.headers["CHANNELS"]
         pts_per_frame = self.headers["PTS_PER_FRAME"]
@@ -304,8 +291,11 @@ class RPC3:
                     f"\n\tExpected data size in bytes: {expected_data_size}"
                     f"\n\tVerify that {self._data_type} is correct"
                 )
-            self.errors.append("DATA_TYPE error")
-            return False
+            raise ValueError(
+                f"DATA_TYPE error: actual data size ({actual_data_size} bytes) "
+                f"does not match expected size ({expected_data_size} bytes) "
+                f"for type {self._data_type}."
+            )
 
         total_frames = pts_per_frame * sum(len(group) for group in data_order)
         data_type_bytes = DATA_TYPES[self._data_type]["bytes"]
@@ -331,7 +321,6 @@ class RPC3:
                     # Determine the actual number of points in group
                     points_in_group = len(frame_group) * pts_per_frame
                     # Set start index based on previous groups
-                    # We must summ the number of frames already processed
                     start_index = (
                         sum(len(group) for group in data_order[:i]) * pts_per_frame
                     )
@@ -343,7 +332,7 @@ class RPC3:
 
         # Remove extra frames if needed
         # This is required if actual number of frames is less
-        # then than number_of_groups * frames_per_group
+        # than number_of_groups * frames_per_group
         if number_of_groups * frames_per_group > frames:
             for ch in range(channels):
                 if len(self.channels[ch].values) > 0:
@@ -360,5 +349,3 @@ class RPC3:
             self.channels = [
                 ch for i, ch in enumerate(self.channels) if i in indices_to_leave
             ]
-
-        return True
