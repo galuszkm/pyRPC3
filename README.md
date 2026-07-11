@@ -12,10 +12,9 @@
 
 ## Installation
 
-
 ### Install via pip
 
-You can install pyRPC3 directly from our Github repository using pip:
+You can install pyRPC3 directly from the GitHub repository:
 
 ```bash
 pip install git+https://github.com/galuszkm/pyRPC3.git
@@ -23,13 +22,15 @@ pip install git+https://github.com/galuszkm/pyRPC3.git
 
 ### Install for development
 
-Clone the repository and install the required packages:
+Clone the repository and install with [uv](https://docs.astral.sh/uv/):
 
 ```bash
 git clone https://github.com/galuszkm/pyRPC3.git
 cd pyRPC3
-pip install -r requirements.txt
+uv run just install
 ```
+
+This installs all dependencies and wires the git hooks in one step.
 
 ### Requirements
 
@@ -99,12 +100,20 @@ rpc.channels[0].plot()
 plt.show()
 ```
 
-### Testing
+## Development
 
-The repository includes a suite of tests using `pytest`. To run the tests, simply execute:
+### Quality Checks
 
 ```bash
-pytest
+uv run just check    # format + lint + type check + hooks
+uv run just test     # pytest with coverage (>=70%)
+uv run just format   # auto-format with Ruff
+```
+
+### Running Tests
+
+```bash
+uv run just test
 ```
 
 Tests cover:
@@ -114,30 +123,8 @@ Tests cover:
 
 ## Contributing
 
-Contributions are welcome! To contribute:
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding standards, and contribution guidelines.
 
-1. **Clone the repository:**
+## License
 
-   ```bash
-   git clone https://github.com/galuszkm/pyRPC3.git
-   ```
-
-2. **Create a new branch:**
-
-   ```bash
-   git checkout -b feature/my-new-feature
-   ```
-
-3. **Make your changes and commit them:**
-
-   ```bash
-   git commit -am "Add new feature"
-   ```
-
-4. **Push to your branch:**
-
-   ```bash
-   git push origin feature/my-new-feature
-   ```
-
-5. **Open a pull request** on the Github repository.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

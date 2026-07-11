@@ -5,7 +5,7 @@ version = "1.0.1"
 description = "Python library for reading and writing RPC3 files"
 requires-python = ">=3.11"
 readme = "README.md"
-license = "MIT"
+license = { text = "MIT" }
 
 dependencies = [
     "numpy>=2.2.5",
@@ -99,6 +99,11 @@ skip_covered = false
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "1.0.1"
+version_provider = "pep621"
+version_files = [
+    "pyproject.toml:^version",
+]
 tag_format = "v$version"
-version_files = ["pyproject.toml:version"]
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"
+changelog_incremental = true

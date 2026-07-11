@@ -1,5 +1,7 @@
 import numpy as np
+
 from pyRPC3 import RPC3, Channel
+
 
 # -------------------------
 # Dummy subclass for RPC3 testing
@@ -9,6 +11,7 @@ class DummyRPC3(RPC3):
     Dummy subclass of RPC3 that bypasses file reading by manually
     initializing with dummy channels.
     """
+
     def _read_file(self):
         """
         Override _read_file to bypass file reading and create dummy channels.
@@ -21,9 +24,11 @@ class DummyRPC3(RPC3):
         self.dt = 0.1
         return True
 
+
 # -------------------------
 # Pytest Unit Tests for RPC3
 # -------------------------
+
 
 def test_rpc3_nonexistent_file(tmp_path):
     """
