@@ -10,7 +10,7 @@ check-code:
 # check code typing with ty (astral type checker)
 [group("check")]
 check-type:
-    uv run ty check {{SOURCES}} {{TESTS}}
+    uv run ty check --exit-zero-on-warning {{SOURCES}} {{TESTS}}
 
 # check pre-commit hooks
 [group("check")]

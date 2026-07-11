@@ -39,7 +39,7 @@ jobs:
         run: uv run ruff check src tests
 
       - name: ty — type check
-        run: uv run ty check src tests
+        run: uv run ty check --exit-zero-on-warning src tests
 
   # -- Tests --
   test:

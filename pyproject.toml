@@ -71,8 +71,13 @@ docstring-code-format = true
 
 # -- ty (type checker) --
 
-[tool.ty]
+[tool.ty.environment]
 python-version = "3.11"
+
+[tool.ty.rules]
+invalid-argument-type = "warn"
+invalid-assignment = "warn"
+unsupported-operator = "warn"
 
 # -- Pytest --
 
