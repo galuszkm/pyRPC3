@@ -42,7 +42,7 @@ depends on changed, it is wrong.
 | RPC3 file reading | Integration: read real `.rsp` fixture, assert channels/headers |
 | RPC3 file writing + round-trip | Integration: read → write → re-read, compare |
 | normalize_int16 | Unit test: known arrays → known results |
-| Error handling (missing file, corrupt data) | Unit test: assert error collected or raised |
+| Error handling (missing file, corrupt data) | Unit test: `pytest.raises` the right exception |
 
 ---
 

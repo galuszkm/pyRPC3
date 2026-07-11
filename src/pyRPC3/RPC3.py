@@ -62,7 +62,7 @@ class RPC3:
         # Read file
         self._read_file()
 
-    def info(self):
+    def info(self) -> None:
         """Print summary of channels."""
         print("\n" + "=" * 90)
         sys.stdout.write(
@@ -77,7 +77,7 @@ class RPC3:
             )
         print("=" * 90 + "\n")
 
-    def save(self, filename: str, exclude_channels: list | None = None):
+    def save(self, filename: str, exclude_channels: list | None = None) -> None:
         """
         Save the RPC3 file using self.dt and self.channels, excluding channels that match
         any entry in exclude_channels (by channel number or channel name).
@@ -102,7 +102,7 @@ class RPC3:
 
         write_rpc3(filename, self.dt, channels_to_write)
 
-    def _read_file(self):
+    def _read_file(self) -> None:
         """
         Read the RPC3 file.
 
@@ -122,7 +122,7 @@ class RPC3:
             self._read_header(file_handle)
             self._read_data(file_handle)
 
-    def _read_header(self, file_handle: BufferedReader):
+    def _read_header(self, file_handle: BufferedReader) -> None:
         """
         Read the header from the file.
 
@@ -224,7 +224,7 @@ class RPC3:
             )
             self.channels.append(ch)
 
-    def _read_data(self, file_handle: BufferedReader):
+    def _read_data(self, file_handle: BufferedReader) -> None:
         """
         Read the data portion of the RPC3 file.
 

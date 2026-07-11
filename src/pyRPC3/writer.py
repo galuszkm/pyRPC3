@@ -6,7 +6,7 @@ import numpy as np
 from .Channel import Channel
 
 
-def normalize_int16(array: np.ndarray):
+def normalize_int16(array: np.ndarray) -> tuple[np.ndarray, float]:
     """
     Normalize a NumPy array to int16 limits.
 
@@ -28,21 +28,9 @@ def normalize_int16(array: np.ndarray):
     return normalized_array, factor
 
 
-def write_rpc3(filename: str, dt: float, channels: list[Channel]):
+def write_rpc3(filename: str, dt: float, channels: list[Channel]) -> None:
     """
     Write RPC3 file using provided channel data.
-
-    Args:
-        filename (str): Output file name.
-        dt (float): Time step.
-        channels (list[Channel]): List of Channel instances.
-    """
-    _write_file(filename, dt, channels)
-
-
-def _write_file(filename: str, dt: float, channels: list[Channel]):
-    """
-    Write the RPC3 file.
 
     Args:
         filename (str): Output file name.

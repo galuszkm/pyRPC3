@@ -43,10 +43,10 @@ src/pyRPC3/
    Favour readable struct unpacking with clear variable names over clever
    bit-twiddling.
 3. **Explicit over implicit** — no global state. An `RPC3` instance holds its
-   own channels, headers, and errors. A `Channel` holds its own data.
+   own channels and headers. A `Channel` holds its own data.
 4. **NumPy is the data layer** — channel values are always `np.ndarray`. Never
    convert to Python lists for processing.
-5. **Fail with context** — when a file can't be read, collect the error with
+5. **Fail with context** — when a file can't be read, raise an exception with
    enough detail for the user to understand why. Never silently skip bad data.
 
 ---
